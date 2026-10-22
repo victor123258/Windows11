@@ -2981,8 +2981,8 @@ APPS.explorer = {
     win.body.innerHTML = '';
     const root = h('div', 'app-root explorer');
     win.body.appendChild(root);
-    const nav = {
-      path: FS.normalize(params.path || '/'),
+    const createTabState = (path) => ({
+      path: FS.normalize(path || '/'),
       history: [],
       index: -1,
       view: 'grid',
@@ -2990,8 +2990,15 @@ APPS.explorer = {
       search: '',
       selected: new Set(),
       mode: null
-    };
+    });
+    const tabs = [createTabState(params.path)];
+    let activeTabIndex = 0;
+    let nav = tabs[0];
     root.innerHTML = `
+      <div class="exp-tabs" data-role="tabs">
+        <div class="exp-tabstrip" data-role="tabstrip"></div>
+        <button class="exp-tab-new" type="button" data-action="new-tab" aria-label="Open new tab" title="Open new tab (Ctrl+T)">${getIcon('plus', 14)}</button>
+      </div>
       <div class="exp-commandbar">
         <button class="exp-cmd exp-cmd-primary" type="button" data-action="new-menu">${getIcon('plus', 15)}<span>New</span>${getIcon('chevron-down', 11)}</button>
         <span class="exp-cmd-sep"></span>
@@ -3078,6 +3085,61 @@ APPS.explorer = {
       nav.selected.clear();
       const titles = { home: 'Home - File Explorer', gallery: 'Gallery - File Explorer', network: 'Network - File Explorer' };
       win.setTitle(titles[mode] || 'File Explorer');
+      render();
+    }
+
+    function tabLabel(state) {
+      if (state.mode === 'home') return 'Home';
+      if (state.mode === 'gallery') return 'Gallery';
+      if (state.mode === 'network') return 'Network';
+      if (state.path === '/') return 'This PC';
+      return FS.parts(state.path).pop() || 'This PC';
+    }
+    function tabIcon(state) {
+      if (state.mode === 'home') return 'home';
+      if (state.mode === 'gallery') return 'image-file';
+      if (state.mode === 'network') return 'cloud';
+      if (state.path === '/') return 'thispc';
+      const node = FS.get(state.path);
+      return node ? fileIconName(node) : 'folder';
+    }
+    function renderTabs() {
+      const strip = $('[data-role="tabstrip"]', root);
+      if (!strip) return;
+      strip.innerHTML = tabs.map((tab, index) => `<div class="exp-tab ${index === activeTabIndex ? 'active' : ''}" role="tab" aria-selected="${index === activeTabIndex}" tabindex="0" data-tab-index="${index}">
+        <span class="et-icon">${getIcon(tabIcon(tab), 14)}</span>
+        <span class="et-label">${esc(tabLabel(tab))}</span>
+        <button class="et-close" type="button" data-tab-close="${index}" aria-label="Close tab" title="Close">${getIcon('close', 9)}</button>
+      </div>`).join('');
+    }
+    function switchTab(index) {
+      if (index < 0 || index >= tabs.length || index === activeTabIndex) return;
+      activeTabIndex = index;
+      nav = tabs[index];
+      searchInput.value = nav.search;
+      sortSelect.value = nav.sort;
+      render();
+    }
+    function addTab(path = '/', mode = 'home') {
+      const state = createTabState(path);
+      state.mode = mode;
+      tabs.push(state);
+      activeTabIndex = tabs.length - 1;
+      nav = tabs[activeTabIndex];
+      searchInput.value = '';
+      sortSelect.value = nav.sort;
+      render();
+    }
+    function closeTab(index) {
+      if (!tabs[index]) return;
+      const wasActive = index === activeTabIndex;
+      tabs.splice(index, 1);
+      if (!tabs.length) { closeWindow(win); return; }
+      if (wasActive) activeTabIndex = Math.min(index, tabs.length - 1);
+      else if (index < activeTabIndex) activeTabIndex -= 1;
+      nav = tabs[activeTabIndex];
+      searchInput.value = nav.search;
+      sortSelect.value = nav.sort;
       render();
     }
 
@@ -3248,6 +3310,7 @@ APPS.explorer = {
     }
     function render() {
       crumbs.innerHTML = crumbHtml();
+      renderTabs();
       $$('[data-side-path]', root).forEach((item) => item.classList.toggle('active', !nav.mode && FS.normalize(item.dataset.sidePath) === nav.path));
       $$('[data-side-mode]', root).forEach((item) => item.classList.toggle('active', item.dataset.sideMode === nav.mode));
       $('[data-nav="back"]', root).disabled = nav.index <= 0;
@@ -3257,12 +3320,15 @@ APPS.explorer = {
       if (nav.mode === 'home') {
         content.innerHTML = homeHtml();
         itemCount.textContent = '';
+        win.setTitle('Home - File Explorer');
       } else if (nav.mode === 'gallery') {
         content.innerHTML = galleryHtml();
         itemCount.textContent = '';
+        win.setTitle('Gallery - File Explorer');
       } else if (nav.mode === 'network') {
         content.innerHTML = networkHtml();
         itemCount.textContent = '';
+        win.setTitle('Network - File Explorer');
       } else {        const list = items();
         const current = FS.get(nav.path);
         if (nav.path === '/' && !nav.search.trim()) {
@@ -3430,6 +3496,10 @@ APPS.explorer = {
         if (action === 'up') navigate(FS.parent(nav.path));
         return;
       }
+      const tabClose = event.target.closest('[data-tab-close]');
+      if (tabClose) { closeTab(Number(tabClose.dataset.tabClose)); return; }
+      const tab = event.target.closest('[data-tab-index]');
+      if (tab) { switchTab(Number(tab.dataset.tabIndex)); return; }
       const crumb = event.target.closest('[data-crumb]');
       if (crumb) { navigate(crumb.dataset.crumb); return; }
       const side = event.target.closest('[data-side-path]');
@@ -3461,6 +3531,7 @@ APPS.explorer = {
         } else if (action === 'more-menu') {
           showBlankMenu(rect.left, rect.bottom + 4);
         } else if (action === 'refresh') { render(); addNotification('File Explorer', 'Refreshed', 'Folder contents are up to date.', 'refresh'); }
+        if (action === 'new-tab') { addTab('/', 'home'); return; }
         return;
       }
       const item = event.target.closest('[data-item-path]');
@@ -3542,6 +3613,17 @@ APPS.explorer = {
       };
       document.addEventListener('pointermove', move);
       document.addEventListener('pointerup', up, { once: true });
+    });
+    root.addEventListener('keydown', (event) => {
+      if (!(event.ctrlKey || event.metaKey)) return;
+      const key = event.key.toLowerCase();
+      if (key === 't') { event.preventDefault(); addTab('/', 'home'); }
+      if (key === 'w') { event.preventDefault(); closeTab(activeTabIndex); }
+      if (key === 'tab') {
+        event.preventDefault();
+        const step = event.shiftKey ? -1 : 1;
+        switchTab((activeTabIndex + step + tabs.length) % tabs.length);
+      }
     });
 
     const oldExplore = openApp;
