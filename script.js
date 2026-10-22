@@ -89,7 +89,7 @@ const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frida
 // ═══════════════════════════════════════
 // SECTION: ICONS — centralized inline SVG library
 // ═══════════════════════════════════════
-const line = (d, extra = '') => `<path d="${d}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" ${extra}/>`;
+const line = (d, extra = '') => `<path d="${d}" fill="none" ${extra} stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>`;
 const fill = (d, color = 'currentColor', extra = '') => `<path d="${d}" fill="${color}" ${extra}/>`;
 const circle = (cx, cy, r, color = 'currentColor', extra = '') => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" ${extra}/>`;
 const rect = (x, y, w, h, r, color = 'currentColor', extra = '') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${color}" ${extra}/>`;
@@ -103,17 +103,17 @@ const ICONS = {
   edge: `${fill('M20.7 9.2C19.6 6.1 16.3 4.1 12.9 4.5 9 5 6.4 8.5 7.1 12.3c.5 2.8 3 4.8 5.9 4.8 2.4 0 4.5-1.4 5.5-3.4-1.8.7-3.9.5-5.4-.6-1.5-1.1-2.2-3-1.7-4.8.5-1.8 2.2-3 4.1-2.8 2.3.2 4 2 4.4 4.2.1.8.1 1.5-.1 2.2.6-.7.9-1.7.9-2.7Z','#159bd7')}${fill('M7.2 12.5c.2 1.4.9 2.7 1.9 3.6-2.1-.4-3.8-1.9-4.4-3.9-.5-1.9-.2-3.9.8-5.5.7-1.1 1.7-2 2.8-2.6-1.6 1.9-2.1 4.6-1.1 6.9.2.5.4.9.7 1.3-.3.1-.5.1-.7.2Z','#35c1f1')}`,
   explorer: `${fill('M3 6.2c0-1.1.9-2 2-2h4.2l1.7 1.8H19c1.1 0 2 .9 2 2v9.8c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V6.2Z','#e9b32b')}${fill('M3 9.5c0-1 .8-1.8 1.8-1.8h14.4c1 0 1.8.8 1.8 1.8l-1 7.9c-.1.7-.7 1.2-1.4 1.2H5.4c-.7 0-1.3-.5-1.4-1.2L3 9.5Z','#ffd75e')}${line('M6 12.2h6.2')}`,
   store: `${fill('M5 8h14l-1 12H6L5 8Z','#0078D4')}${line('M8.5 8V6.5a3.5 3.5 0 0 1 7 0V8','stroke="#0b5a9e" stroke-width="1.8"')}${rect(10.6,11.2,2.8,4.8,.8,'#fff')}${rect(9.5,11.2,5,1.5,.6,'#fff')}`,
-  settings: `${line('M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z')}${line('M19.1 13.3a7.7 7.7 0 0 0 0-2.6l2-1.5-2-3.5-2.4 1a7.7 7.7 0 0 0-2.3-1.3L14.1 3h-4.2l-.4 2.4A7.7 7.7 0 0 0 7.3 6.7l-2.4-1-2 3.5 2 1.5a7.7 7.7 0 0 0 0 2.6l-2 1.5 2 3.5 2.4-1a7.7 7.7 0 0 0 2.3 1.3l.4 2.4h4.2l.4-2.4a7.7 7.7 0 0 0 2.3-1.3l2.4 1 2-3.5-2.2-1.5Z')}`,
+  settings: `${fill('M19.1 13.3a7.7 7.7 0 0 0 0-2.6l2-1.5-2-3.5-2.4 1a7.7 7.7 0 0 0-2.3-1.3L14.1 3h-4.2l-.4 2.4A7.7 7.7 0 0 0 7.3 6.7l-2.4-1-2 3.5 2 1.5a7.7 7.7 0 0 0 0 2.6l-2 1.5 2 3.5 2.4-1a7.7 7.7 0 0 0 2.3 1.3l.4 2.4h4.2l.4-2.4a7.7 7.7 0 0 0 2.3-1.3l2.4 1 2-3.5-2.2-1.5Z','#6e8fab')}${circle(12,12,3.4,'#f3f9ff')}${circle(12,12,1.7,'#6e8fab')}`,
   terminal: `${rect(2.5,4,19,16,1.5,'#101010')}${line('M6.5 9 9 11.5 6.5 14','stroke="#cccccc" stroke-width="1.5"')}${line('M11 15h5.5','stroke="#cccccc" stroke-width="1.5"')}`,
   vscode: `${fill('M17.8 2.2 9.4 10.1 5.5 7.1 3 8.3v7.4l2.5 1.2 3.9-3 8.4 7.9 3.2-1.5V3.7l-3.2-1.5Zm0 5.1v9.4l-5.8-4.7 5.8-4.7Z','#007ACC')}${fill('M5.5 9.4v5.2l2.6-2.6-2.6-2.6Z','#1e9ae0')}`,
-  notepad: `${fill('M5 2.5h9.2L19 7.3v14.2H5V2.5Z','#f6f6f6')}${fill('M14 2.5v5h5','#d6e6f7')}${line('M7.5 10h8M7.5 13h8M7.5 16h5.5','stroke="#5c89b5" stroke-width="1.5"')}`,
+  notepad: `${rect(4,2.5,16,19,2,'#2b7cd3')}${rect(6,4.5,12,15.5,1,'#f8fbff')}${line('M8.5 8.5h7M8.5 11.5h7M8.5 14.5h5.2','stroke="#78aede" stroke-width="1.4"')}`,
   calculator: `${rect(4,2.2,16,19.6,2,'#e8e8e8')}${rect(6.5,4.5,11,4,.8,'#202020')}${rect(6.5,10.4,3,2.7,.5,'#a9a9a9')}${rect(10.5,10.4,3,2.7,.5,'#a9a9a9')}${rect(14.5,10.4,3,2.7,.5,'#0078d4')}${rect(6.5,14.2,3,2.7,.5,'#a9a9a9')}${rect(10.5,14.2,3,2.7,.5,'#a9a9a9')}${rect(14.5,14.2,3,2.7,.5,'#0078d4')}${rect(6.5,18,3,2.1,.5,'#a9a9a9')}${rect(10.5,18,3,2.1,.5,'#a9a9a9')}${rect(14.5,18,3,2.1,.5,'#0078d4')}`,
   paint: `${fill('M12 2.5C6.8 2.5 2.5 6.3 2.5 11.4c0 3.9 2.7 6.2 5.7 6.2h1.6c1.2 0 1.8.8 1.8 1.7 0 1.1 1 1.7 2 1.7 4.5 0 7.9-3.7 7.9-8.5S17.6 2.5 12 2.5Z','#e8e8e8')}${circle(8,7.2,1.4,'#e81123')}${circle(13,6,1.4,'#ffb900')}${circle(17,9,1.4,'#0078d4')}${circle(6.4,12,1.4,'#00b294')}${circle(16.8,14.5,1.4,'#8764b8')}`,
   photos: `${rect(2.5,4,19,16,2,'#e9eef4')}${fill('M4 18 9.3 11l4 5 2.4-2.8L20 18H4Z','#2e8b57')}${circle(16.8,7.7,2,'#f2b01e')}${fill('M4 18 9.3 11l1.7 2.1L7 18H4Z','#82c77d')}`,
   taskmanager: `${rect(3,3,18,18,2.5,'#e9eef4')}${rect(6,13,2.4,5,1,'#0078d4')}${rect(10.2,8,2.4,10,1,'#4cc2ff')}${rect(14.4,11,2.4,7,1,'#8764b8')}`,
-  recyclebin: `${line('M5.5 7h13l-1 13h-11l-1-13Z')}${line('M4 7h16M9 7V4.8h6V7M10 10.3v6.5M14 10.3v6.5')}`,
-  'recyclebin-full': `${line('M5.5 7h13l-1 13h-11l-1-13Z')}${line('M4 7h16M9 7V4.8h6V7M10 10.3v6.5M14 10.3v6.5')}${fill('M9 10.5 10.7 15l1.6-3 1.8 3L16 10.5l-1.2 5h-4.6L9 10.5Z','#0078d4')}`,
-  thispc: `${rect(2.5,3.5,19,14,1.8,'none','stroke="currentColor" stroke-width="1.6"')}${line('M8 21h8M12 17.5V21')}${rect(5.5,6.5,13,8,1,'#0078d4')}`,
+  recyclebin: `${fill('M6.1 7.2h11.8l-1 13.2H7.1L6.1 7.2Z','rgba(185,224,255,.36)')}${line('M5 7h14M9 7V4.6h6V7M9.4 10.1v6.8M12 10.1v6.8M14.6 10.1v6.8','stroke="#eef8ff" stroke-width="1.15"')}${line('M6.1 7.2h11.8l-1 13.2H7.1L6.1 7.2Z','stroke="#f3faff" stroke-width="1.05"')}`,
+  'recyclebin-full': `${fill('M6.1 7.2h11.8l-1 13.2H7.1L6.1 7.2Z','rgba(185,224,255,.4)')}${line('M5 7h14M9 7V4.6h6V7M9.4 10.1v6.8M12 10.1v6.8M14.6 10.1v6.8','stroke="#eef8ff" stroke-width="1.15"')}${line('M6.1 7.2h11.8l-1 13.2H7.1L6.1 7.2Z','stroke="#f3faff" stroke-width="1.05"')}${fill('M9.1 10.8 10.9 15l1.7-3.2 1.8 3.2 1.7-4.2.7 4.9h-5.5l.5-4.9Z','#8dd7ff')}`,
+  thispc: `${rect(2.5,3.5,19,14,1.7,'#dceaf8')}${rect(4.4,5.2,15.2,9.6,.8,'#2b7de0')}${fill('M5.2 6.2 9.3 6.2 5.2 11.1Z','#83c9ff')}${rect(6,17.1,12,1.4,.5,'#bdcede')}${rect(10.8,18.4,2.4,2.1,.4,'#aebfd0')}`,
   word: `${rect(3,2.5,18,19,1.5,'#185abd')}${fill('M5.8 7.3 9.2 17h2.3l2.2-6.3 2.2 6.3h2.3l3.4-9.7h-2.6l-2 6.5-2.2-6.5h-2l-2.2 6.5-2-6.5H5.8Z','#fff')}`,
   excel: `${rect(3,2.5,18,19,1.5,'#107c41')}${line('M7 7.3l10 9.4M17 7.3 7 16.7','stroke="#fff" stroke-width="2.4"')}${rect(4.6,4.3,4.8,4.8,0,'#0b5c30')}${fill('M6 5.6l2.2 2.2-2.2 2.2.8.8L9 8.6l2.2 2.2.8-.8-2.2-2.2 2.2-2.2-.8-.8L9 6.8 6.8 4.8 6 5.6Z','#fff')}`,
   powerpoint: `${rect(3,2.5,18,19,1.5,'#d24726')}${line('M8 17V7.2h4a3.3 3.3 0 0 1 0 6.6H8','stroke="#fff" stroke-width="2.1"')}`,
@@ -183,6 +183,8 @@ const ICONS = {
   copy: `${rect(8,8,12,12,1.5,'none','stroke="currentColor" stroke-width="1.5"')}${line('M5 16H4V4h12v1')}`,
   paste: `${rect(5,5,14,16,1.5,'none','stroke="currentColor" stroke-width="1.5"')}${rect(8,2.5,8,5,1)}`,
   cut: `${line('M6 4l12 16M18 4 6 20')}${circle(5.5,19,2)}${circle(18.5,19,2)}`,
+  share: `${circle(6,12,2.2)}${circle(18,6,2.2)}${circle(18,18,2.2)}${line('m8 11 8-4M8 13l8 4')}`,
+  ellipsis: `${circle(5.5,12,1.4)}${circle(12,12,1.4)}${circle(18.5,12,1.4)}`,
   'grid-view': `${rect(3,3,8,8,1)}${rect(13,3,8,8,1)}${rect(3,13,8,8,1)}${rect(13,13,8,8,1)}`,
   'list-view': `${line('M4 6h16M4 12h16M4 18h16')}`,
   sort: `${line('M7 4v16M4 17l3 3 3-3M13 6h7M13 11h5M13 16h3')}`,
@@ -1741,7 +1743,6 @@ function initTaskbar() {
   $('#weather-btn').addEventListener('click', toggleWidgets);
   $('#tray-system').addEventListener('click', toggleQuickSettings);
   $('#tray-clock').addEventListener('click', toggleCalendarFlyout);
-  $('#tray-bell').addEventListener('click', toggleCalendarFlyout);
   $('#show-desktop-strip').addEventListener('click', toggleShowDesktop);
   $('#tray-overflow').addEventListener('click', (event) => {
     event.stopPropagation();
@@ -2191,7 +2192,7 @@ function renderQuickSettings() {
     { key: 'darkMode', label: 'Dark mode', icon: state.theme === 'dark' ? 'moon' : 'sun', on: state.theme === 'dark', sub: state.theme === 'dark' ? 'On' : 'Off' }
   ];
   panel.innerHTML = `
-    <div class="qs-header"><h2>Quick settings</h2><button class="qs-edit" type="button" aria-label="Edit quick settings" title="Edit quick settings">${getIcon('settings', 15)}</button></div>
+    <div class="qs-header"><button class="qs-edit" type="button" aria-label="Edit quick settings" title="Edit quick settings">${getIcon('pencil', 15)}</button></div>
     <div class="qs-toggles">
       ${toggles.map((toggle) => `<button class="qs-toggle ${toggle.on ? 'on' : ''}" type="button" data-qs-toggle="${toggle.key}" aria-pressed="${toggle.on}">
         ${getIcon(toggle.icon, 19)}<span>${esc(toggle.label)}</span><span class="qs-toggle-sub">${esc(toggle.sub)}</span>
@@ -2873,10 +2874,10 @@ function openApp(appId, params = {}) {
 APPS.explorer = {
   title: 'File Explorer',
   icon: 'explorer',
-  width: 950,
-  height: 620,
-  minWidth: 620,
-  minHeight: 420,
+  width: 1000,
+  height: 640,
+  minWidth: 640,
+  minHeight: 430,
   onReopen(win, params) {
     if (params.path && win.explorerNavigate) win.explorerNavigate(params.path);
   },
@@ -2894,12 +2895,24 @@ APPS.explorer = {
       selected: new Set()
     };
     root.innerHTML = `
-      <div class="exp-toolbar">
-        <button class="exp-nav-btn" type="button" data-nav="back" aria-label="Back">${getIcon('back', 15)}</button>
-        <button class="exp-nav-btn" type="button" data-nav="forward" aria-label="Forward">${getIcon('forward', 15)}</button>
-        <button class="exp-nav-btn" type="button" data-nav="up" aria-label="Up">${getIcon('up-arrow', 15)}</button>
-        <div class="exp-address" data-role="crumbs"></div>
-        <label class="exp-search">${getIcon('search', 13)}<input type="text" placeholder="Search" aria-label="Search this folder" data-role="search"></label>
+      <div class="exp-commandbar">
+        <button class="exp-cmd exp-cmd-primary" type="button" data-action="new-menu">${getIcon('plus', 15)}<span>New</span>${getIcon('chevron-down', 11)}</button>
+        <span class="exp-cmd-sep"></span>
+        <button class="exp-cmd" type="button" disabled>${getIcon('cut', 15)}<span>Cut</span></button>
+        <button class="exp-cmd" type="button" disabled>${getIcon('copy', 15)}<span>Copy</span></button>
+        <button class="exp-cmd" type="button" disabled>${getIcon('paste', 15)}<span>Paste</span></button>
+        <button class="exp-cmd" type="button" data-action="rename" data-cmd-needs-selection disabled>${getIcon('pencil', 15)}<span>Rename</span></button>
+        <button class="exp-cmd" type="button" disabled>${getIcon('share', 15)}<span>Share</span></button>
+        <button class="exp-cmd" type="button" data-action="delete" data-cmd-needs-selection disabled>${getIcon('trash', 15)}<span>Delete</span></button>
+        <span class="exp-cmd-spacer"></span>
+        <label class="exp-cmd exp-cmd-select" title="Sort files">${getIcon('sort', 15)}<span>Sort</span>${getIcon('chevron-down', 11)}
+          <select data-role="sort" aria-label="Sort files">
+            <option value="name">Name</option><option value="modified">Date modified</option><option value="type">Type</option><option value="size">Size</option>
+          </select>
+        </label>
+        <button class="exp-cmd" type="button" data-action="view-menu">${getIcon('grid-view', 15)}<span>View</span>${getIcon('chevron-down', 11)}</button>
+        <button class="exp-cmd exp-cmd-icon" type="button" data-action="refresh" aria-label="Refresh" title="Refresh">${getIcon('refresh', 15)}</button>
+        <button class="exp-cmd exp-cmd-icon" type="button" data-action="more-menu" aria-label="More options" title="More options">${getIcon('ellipsis', 15)}</button>
       </div>
       <div class="exp-layout">
         <aside class="exp-sidebar">
@@ -2908,6 +2921,8 @@ APPS.explorer = {
           <button class="exp-side-item" type="button" data-side-path="/Downloads">${getIcon('download', 16)}<span>Downloads</span></button>
           <button class="exp-side-item" type="button" data-side-path="/Documents">${getIcon('folder', 16)}<span>Documents</span></button>
           <button class="exp-side-item" type="button" data-side-path="/Pictures">${getIcon('image-file', 16)}<span>Pictures</span></button>
+          <button class="exp-side-item" type="button" data-side-path="/Music">${getIcon('folder-music', 16)}<span>Music</span></button>
+          <button class="exp-side-item" type="button" data-side-path="/Videos">${getIcon('folder-video', 16)}<span>Videos</span></button>
           <div class="exp-side-section">This PC</div>
           <button class="exp-side-item" type="button" data-side-path="/">${getIcon('thispc', 16)}<span>This PC</span></button>
           <button class="exp-side-item" type="button" data-side-path="/">${getIcon('disk', 16)}<span>Local Disk (C:)</span></button>
@@ -2915,17 +2930,12 @@ APPS.explorer = {
           <button class="exp-side-item" type="button" data-side-app="recyclebin">${getIcon(state.recycleBin.length ? 'recyclebin-full' : 'recyclebin', 16)}<span>Recycle Bin</span></button>
         </aside>
         <section class="exp-main">
-          <div class="exp-tools">
-            <button class="exp-tool-btn active" type="button" data-view="grid" aria-label="Grid view">${getIcon('grid-view', 14)} Details</button>
-            <button class="exp-tool-btn" type="button" data-view="list" aria-label="List view">${getIcon('list-view', 14)} List</button>
-            <span style="width:1px;height:18px;background:var(--subtle-border);margin:0 3px"></span>
-            <span style="font-size:10.5px;color:var(--text-secondary)">Sort</span>
-            <select class="settings-select" style="height:25px;min-width:105px;font-size:10.5px" data-role="sort" aria-label="Sort files">
-              <option value="name">Name</option><option value="modified">Date modified</option><option value="type">Type</option><option value="size">Size</option>
-            </select>
-            <div class="exp-tool-spacer"></div>
-            <button class="exp-tool-btn" type="button" data-action="new-folder">${getIcon('plus', 14)} New folder</button>
-            <button class="exp-tool-btn" type="button" data-action="refresh" aria-label="Refresh">${getIcon('refresh', 14)}</button>
+          <div class="exp-toolbar">
+            <button class="exp-nav-btn" type="button" data-nav="back" aria-label="Back">${getIcon('back', 15)}</button>
+            <button class="exp-nav-btn" type="button" data-nav="forward" aria-label="Forward">${getIcon('forward', 15)}</button>
+            <button class="exp-nav-btn" type="button" data-nav="up" aria-label="Up">${getIcon('up-arrow', 15)}</button>
+            <div class="exp-address" data-role="crumbs"></div>
+            <label class="exp-search">${getIcon('search', 13)}<input type="text" placeholder="Search" aria-label="Search this folder" data-role="search"></label>
           </div>
           <div class="exp-content" data-role="content" tabindex="0" aria-label="Folder contents"></div>
           <div class="exp-status"><span data-role="item-count"></span><span data-role="selection-count"></span><span class="spacer"></span><span>${getIcon('thispc', 13)}</span></div>
@@ -3001,13 +3011,17 @@ APPS.explorer = {
         <div class="ei-name">${esc(node.name)}</div>
       </div>`;
     }
+    function updateCommandState() {
+      const hasSelection = nav.selected.size > 0;
+      $$('[data-cmd-needs-selection]', root).forEach((button) => { button.disabled = !hasSelection; });
+    }
     function render() {
       crumbs.innerHTML = crumbHtml();
       $$('[data-side-path]', root).forEach((item) => item.classList.toggle('active', FS.normalize(item.dataset.sidePath) === nav.path));
       $('[data-nav="back"]', root).disabled = nav.index <= 0;
       $('[data-nav="forward"]', root).disabled = nav.index >= nav.history.length - 1;
       $('[data-nav="up"]', root).disabled = nav.path === '/';
-      $$('[data-view]', root).forEach((button) => button.classList.toggle('active', button.dataset.view === nav.view));
+      updateCommandState();
       const list = items();
       const current = FS.get(nav.path);
       if (!list.length) {
@@ -3043,6 +3057,7 @@ APPS.explorer = {
         item.setAttribute('aria-selected', String(isSelected));
       });
       selectionCount.textContent = nav.selected.size ? `${nav.selected.size} selected` : '';
+      updateCommandState();
     }
     function openItem(path) {
       const node = FS.get(path);
@@ -3180,8 +3195,26 @@ APPS.explorer = {
       if (viewButton) { nav.view = viewButton.dataset.view; render(); return; }
       const actionButton = event.target.closest('[data-action]');
       if (actionButton) {
-        if (actionButton.dataset.action === 'new-folder') createFolder();
-        else if (actionButton.dataset.action === 'refresh') { render(); addNotification('File Explorer', 'Refreshed', 'Folder contents are up to date.', 'refresh'); }
+        const action = actionButton.dataset.action;
+        const rect = actionButton.getBoundingClientRect();
+        if (action === 'new-menu') {
+          showContextMenu([
+            { label: 'Folder', icon: 'folder', action: createFolder },
+            { label: 'Text Document', icon: 'text-file', action: createTextFile }
+          ], rect.left, rect.bottom + 4);
+        } else if (action === 'view-menu') {
+          showContextMenu([
+            { label: 'Large icons', checked: nav.view === 'grid', action: () => { nav.view = 'grid'; render(); } },
+            { label: 'List', checked: nav.view === 'list', action: () => { nav.view = 'list'; render(); } }
+          ], rect.left, rect.bottom + 4);
+        } else if (action === 'rename') {
+          const path = [...nav.selected][0];
+          if (path) startRename(path);
+        } else if (action === 'delete') {
+          [...nav.selected].forEach(deleteItem);
+        } else if (action === 'more-menu') {
+          showBlankMenu(rect.left, rect.bottom + 4);
+        } else if (action === 'refresh') { render(); addNotification('File Explorer', 'Refreshed', 'Folder contents are up to date.', 'refresh'); }
         return;
       }
       const item = event.target.closest('[data-item-path]');
@@ -3571,10 +3604,10 @@ function setStateValue(path, value) {
 APPS.settings = {
   title: 'Settings',
   icon: 'settings',
-  width: 980,
-  height: 690,
-  minWidth: 680,
-  minHeight: 470,
+  width: 1060,
+  height: 710,
+  minWidth: 760,
+  minHeight: 500,
   onReopen(win, params) {
     if (win.settingsNavigate) {
       if (params.page) win.settingsNavigate(params.page);
@@ -3911,7 +3944,7 @@ APPS.settings = {
         <div class="settings-top">
           <span style="width:24px;height:24px">${getIcon('settings', 24)}</span>
           <label class="settings-search">${getIcon('search', 14)}<input id="settings-search" type="text" placeholder="Find a setting" value="${esc(query)}" autocomplete="off" aria-label="Find a setting"></label>
-          <button class="icon-btn" type="button" data-settings-action="account" aria-label="Account">${getIcon('user', 17)}</button>
+          <button class="icon-btn settings-account" type="button" data-settings-action="account" aria-label="Account">${getIcon('user', 17)}</button>
         </div>
         <div class="settings-body">
           <aside class="settings-sidebar">

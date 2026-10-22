@@ -15,6 +15,8 @@
 <body>
   <div id="screen-root">
     <div id="wallpaper" class="wallpaper" aria-hidden="true">
+      <img id="bloom-image" class="wallpaper-image wallpaper-image-light" src="bloom.jpg" alt="" draggable="false">
+      <img id="bloom-image-dark" class="wallpaper-image wallpaper-image-dark" src="bloom-dark.jpg" alt="" draggable="false">
       <div class="wallpaper-noise"></div>
       <div class="wallpaper-bloom"></div>
     </div>
@@ -49,10 +51,6 @@
         <button id="tray-clock" class="tray-button tray-clock" type="button" aria-label="Open calendar and notifications">
           <span id="clock-time">11:42 AM</span>
           <span id="clock-date">6/14/2025</span>
-        </button>
-        <button id="tray-bell" class="tray-button tray-bell" type="button" aria-label="Notifications">
-          <span data-icon="notification"></span>
-          <span id="bell-dot" class="bell-dot" hidden></span>
         </button>
       </div>
       <button id="show-desktop-strip" class="show-desktop-strip" type="button" aria-label="Show desktop" title="Show desktop"></button>
