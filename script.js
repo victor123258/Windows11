@@ -1032,6 +1032,14 @@ const WM = {
 
     $('.window-control.minimize', el).addEventListener('click', (event) => { event.stopPropagation(); minimizeWindow(win); });
     $('.window-control.maximize', el).addEventListener('click', (event) => { event.stopPropagation(); if (options.maximizable !== false) toggleMaximizeWindow(win); });
+    if (options.maximizable !== false) {
+      const maxBtn = $('.window-control.maximize', el);
+      maxBtn.addEventListener('mouseenter', () => {
+        clearTimeout(snapFlyoutTimer);
+        snapFlyoutTimer = setTimeout(() => showSnapFlyout(win, maxBtn), 320);
+      });
+      maxBtn.addEventListener('mouseleave', () => scheduleHideSnapFlyout());
+    }
     $('.window-control.close', el).addEventListener('click', (event) => { event.stopPropagation(); closeWindow(win); });
     el.addEventListener('pointerdown', () => focusWindow(win));
     const titlebar = $('.window-titlebar', el);
@@ -1079,6 +1087,7 @@ function focusDesktop() {
 }
 function closeWindow(win, silent = false) {
   if (!win || win.closing) return;
+  if (snapFlyoutWin === win) hideSnapFlyout();
   win.closing = true;
   win.cleanups.forEach((fn) => { try { fn(); } catch (error) { console.warn(error); } });
   if (typeof win.onClose === 'function') { try { win.onClose(); } catch (error) { console.warn(error); } }
@@ -1222,6 +1231,90 @@ function restoreWindowGeometry(win) {
 function toggleMaximizeWindow(win) {
   if (win.maximized || win.snapped) restoreWindowGeometry(win);
   else maximizeWindow(win);
+}
+const SNAP_LAYOUTS = [
+  { id: 'cols-2', zones: [{ x: 0, y: 0, w: 0.5, h: 1 }, { x: 0.5, y: 0, w: 0.5, h: 1 }] },
+  { id: 'cols-2-wide', zones: [{ x: 0, y: 0, w: 0.6667, h: 1 }, { x: 0.6667, y: 0, w: 0.3333, h: 1 }] },
+  { id: 'cols-3', zones: [{ x: 0, y: 0, w: 0.3333, h: 1 }, { x: 0.3333, y: 0, w: 0.3333, h: 1 }, { x: 0.6667, y: 0, w: 0.3333, h: 1 }] },
+  { id: 'cols-3-mixed', zones: [{ x: 0, y: 0, w: 0.5, h: 1 }, { x: 0.5, y: 0, w: 0.25, h: 1 }, { x: 0.75, y: 0, w: 0.25, h: 1 }] },
+  { id: 'cols-4', zones: [{ x: 0, y: 0, w: 0.25, h: 1 }, { x: 0.25, y: 0, w: 0.25, h: 1 }, { x: 0.5, y: 0, w: 0.25, h: 1 }, { x: 0.75, y: 0, w: 0.25, h: 1 }] },
+  { id: 'grid-2x2', zones: [{ x: 0, y: 0, w: 0.5, h: 0.5 }, { x: 0.5, y: 0, w: 0.5, h: 0.5 }, { x: 0, y: 0.5, w: 0.5, h: 0.5 }, { x: 0.5, y: 0.5, w: 0.5, h: 0.5 }] }
+];
+let snapFlyout = null;
+let snapFlyoutTimer = null;
+let snapFlyoutWin = null;
+function buildSnapFlyout() {
+  if (snapFlyout) return snapFlyout;
+  const el = document.createElement('div');
+  el.className = 'snap-flyout';
+  el.id = 'snap-flyout';
+  el.setAttribute('role', 'menu');
+  el.setAttribute('aria-label', 'Snap layouts');
+  el.innerHTML = `<div class="snap-flyout-row">${SNAP_LAYOUTS.map((layout, layoutIndex) => `<button class="snap-layout" type="button" data-layout="${layoutIndex}" aria-label="Snap layout ${layoutIndex + 1}">
+    <span class="snap-diagram">${layout.zones.map((zone, zoneIndex) => `<i class="snap-zone" data-layout="${layoutIndex}" data-zone="${zoneIndex}" style="left:${(zone.x * 100).toFixed(3)}%;top:${(zone.y * 100).toFixed(3)}%;width:${(zone.w * 100).toFixed(3)}%;height:${(zone.h * 100).toFixed(3)}%"></i>`).join('')}</span>
+  </button>`).join('')}</div>`;
+  el.addEventListener('mouseenter', () => { clearTimeout(snapFlyoutTimer); });
+  el.addEventListener('mouseleave', () => scheduleHideSnapFlyout());
+  el.addEventListener('click', (event) => {
+    const zoneEl = event.target.closest('[data-zone]');
+    if (!zoneEl) return;
+    const layout = SNAP_LAYOUTS[Number(zoneEl.dataset.layout)];
+    const zone = layout.zones[Number(zoneEl.dataset.zone)];
+    if (zone && snapFlyoutWin) snapWindowToZone(snapFlyoutWin, zone);
+    hideSnapFlyout();
+  });
+  document.body.appendChild(el);
+  snapFlyout = el;
+  return el;
+}
+function showSnapFlyout(win, anchor) {
+  if (!win || win.options.maximizable === false) return;
+  const el = buildSnapFlyout();
+  snapFlyoutWin = win;
+  el.classList.add('visible');
+  const rect = anchor.getBoundingClientRect();
+  const width = el.offsetWidth;
+  const height = el.offsetHeight;
+  let left = rect.right - width;
+  left = Math.max(8, Math.min(left, window.innerWidth - width - 8));
+  let top = rect.top - height - 8;
+  if (top < 8) top = rect.bottom + 8;
+  el.style.left = `${left}px`;
+  el.style.top = `${top}px`;
+}
+function hideSnapFlyout() {
+  clearTimeout(snapFlyoutTimer);
+  if (snapFlyout) snapFlyout.classList.remove('visible');
+  snapFlyoutWin = null;
+}
+function scheduleHideSnapFlyout() {
+  clearTimeout(snapFlyoutTimer);
+  snapFlyoutTimer = setTimeout(() => hideSnapFlyout(), 180);
+}
+function snapWindowToZone(win, zone) {
+  if (!win || win.options.maximizable === false) return;
+  const viewH = window.innerHeight - 48;
+  if (!win.maximized && !win.snapped) {
+    win.restoreRect = { left: win.el.offsetLeft, top: win.el.offsetTop, width: win.el.offsetWidth, height: win.el.offsetHeight };
+  }
+  const target = {
+    left: Math.round(zone.x * window.innerWidth),
+    top: Math.round(zone.y * viewH),
+    width: Math.round(zone.w * window.innerWidth),
+    height: Math.round(zone.h * viewH)
+  };
+  win.maximized = false;
+  win.snapped = 'zone';
+  win.el.classList.remove('maximized');
+  win.el.classList.add('snapped');
+  animateGeometry(win, target);
+  const maxButton = $('.window-control.maximize', win.el);
+  if (maxButton) {
+    maxButton.innerHTML = getIcon('maximize', 10);
+    maxButton.setAttribute('aria-label', 'Maximize');
+    maxButton.title = 'Maximize';
+  }
+  focusWindow(win);
 }
 function snapWindow(win, mode) {
   if (!win || win.options.maximizable === false) return;
@@ -2050,7 +2143,7 @@ function renderStartMenu() {
   menu.innerHTML = `
     <div class="start-search-wrap">
       <span class="start-search-icon">${getIcon('search', 16)}</span>
-      <input id="start-search-input" class="start-search" type="text" placeholder="Type here to search" value="${esc(startQuery)}" autocomplete="off" aria-label="Search apps">
+      <input id="start-search-input" class="start-search" type="text" placeholder="Search for apps, settings, and documents" value="${esc(startQuery)}" autocomplete="off" aria-label="Search apps">
       <button class="start-search-clear ${startQuery ? 'visible' : ''}" type="button" aria-label="Clear search">${getIcon('close', 13)}</button>
     </div>
     <div class="start-scroll">${body}</div>
@@ -2184,18 +2277,17 @@ function renderQuickSettings() {
   const panel = $('#quick-settings');
   if (!panel) return;
   const toggles = [
-    { key: 'wifi', label: state.airplane ? 'Airplane' : state.wifi ? 'WiFi' : 'WiFi off', icon: state.airplane ? 'airplane' : state.wifi ? 'wifi' : 'wifi-off', on: state.wifi && !state.airplane, sub: state.wifi ? 'Connected' : 'Off' },
-    { key: 'bluetooth', label: 'Bluetooth', icon: state.bluetooth ? 'bluetooth' : 'bluetooth-off', on: state.bluetooth, sub: state.bluetooth ? 'On' : 'Off' },
-    { key: 'airplane', label: 'Airplane mode', icon: 'airplane', on: state.airplane, sub: state.airplane ? 'On' : 'Off' },
-    { key: 'batterySaver', label: 'Battery saver', icon: 'battery', on: state.batterySaver, sub: state.batterySaver ? 'On' : 'Off' },
-    { key: 'nightLight', label: 'Night light', icon: 'nightlight', on: state.nightLight, sub: state.nightLight ? 'On' : 'Off' },
-    { key: 'darkMode', label: 'Dark mode', icon: state.theme === 'dark' ? 'moon' : 'sun', on: state.theme === 'dark', sub: state.theme === 'dark' ? 'On' : 'Off' }
+    { key: 'wifi', label: state.airplane ? 'Airplane' : 'WiFi', icon: state.airplane ? 'airplane' : state.wifi ? 'wifi' : 'wifi-off', on: state.wifi && !state.airplane, sub: state.wifi && !state.airplane ? 'HOME-5G' : '' },
+    { key: 'bluetooth', label: 'Bluetooth', icon: state.bluetooth ? 'bluetooth' : 'bluetooth-off', on: state.bluetooth, sub: '' },
+    { key: 'airplane', label: 'Airplane mode', icon: 'airplane', on: state.airplane, sub: '' },
+    { key: 'batterySaver', label: 'Battery saver', icon: 'battery', on: state.batterySaver, sub: '' },
+    { key: 'nightLight', label: 'Night light', icon: 'nightlight', on: state.nightLight, sub: '' },
+    { key: 'darkMode', label: 'Dark mode', icon: state.theme === 'dark' ? 'moon' : 'sun', on: state.theme === 'dark', sub: '' }
   ];
   panel.innerHTML = `
-    <div class="qs-header"><button class="qs-edit" type="button" aria-label="Edit quick settings" title="Edit quick settings">${getIcon('pencil', 15)}</button></div>
     <div class="qs-toggles">
       ${toggles.map((toggle) => `<button class="qs-toggle ${toggle.on ? 'on' : ''}" type="button" data-qs-toggle="${toggle.key}" aria-pressed="${toggle.on}">
-        ${getIcon(toggle.icon, 19)}<span>${esc(toggle.label)}</span><span class="qs-toggle-sub">${esc(toggle.sub)}</span>
+        ${getIcon(toggle.icon, 20)}<span>${esc(toggle.label)}</span>${toggle.sub ? `<span class="qs-toggle-sub">${esc(toggle.sub)}</span>` : ''}
       </button>`).join('')}
     </div>
     <div class="qs-slider-row">
@@ -2208,10 +2300,13 @@ function renderQuickSettings() {
     </div>
     <div class="qs-footer">
       <span class="qs-battery">${getIcon('battery', 16)} 89% — 5h 21m remaining</span>
-      <button class="qs-icon-btn" type="button" data-qs-settings aria-label="Open settings">${getIcon('settings', 16)}</button>
+      <span class="qs-footer-actions">
+        <button class="qs-icon-btn" type="button" data-qs-edit aria-label="Edit quick settings" title="Edit quick settings">${getIcon('pencil', 15)}</button>
+        <button class="qs-icon-btn" type="button" data-qs-settings aria-label="Open settings" title="All settings">${getIcon('settings', 16)}</button>
+      </span>
     </div>
   `;
-  $('.qs-edit', panel).addEventListener('click', () => { closeAllFlyouts(); openApp('settings', { page: 'personalization' }); });
+  $('[data-qs-edit]', panel).addEventListener('click', () => { closeAllFlyouts(); openApp('settings', { page: 'personalization' }); });
   $$('[data-qs-toggle]', panel).forEach((button) => button.addEventListener('click', () => toggleQuickSetting(button.dataset.qsToggle)));
   const brightness = $('#qs-brightness');
   brightness.addEventListener('input', () => {
@@ -2600,6 +2695,7 @@ function initGlobalEvents() {
       return;
     }
     if (!event.target.closest('.context-menu, .context-submenu')) closeContextMenus();
+    if (!event.target.closest('#snap-flyout')) hideSnapFlyout();
     const insideFlyout = event.target.closest('.flyout, .widgets-panel, .start-popover, #taskbar, #tray-popup');
     if (!insideFlyout) closeAllFlyouts();
     if (!event.target.closest('#tray-popup, #tray-overflow')) {
@@ -2892,7 +2988,8 @@ APPS.explorer = {
       view: 'grid',
       sort: 'name',
       search: '',
-      selected: new Set()
+      selected: new Set(),
+      mode: null
     };
     root.innerHTML = `
       <div class="exp-commandbar">
@@ -2916,17 +3013,19 @@ APPS.explorer = {
       </div>
       <div class="exp-layout">
         <aside class="exp-sidebar">
-          <div class="exp-side-section">Quick access</div>
+          <button class="exp-side-item" type="button" data-side-mode="home">${getIcon('home', 16)}<span>Home</span></button>
+          <button class="exp-side-item" type="button" data-side-mode="gallery">${getIcon('image-file', 16)}<span>Gallery</span></button>
+          <div class="exp-side-sep"></div>
           <button class="exp-side-item" type="button" data-side-path="/Desktop">${getIcon('desktop', 16)}<span>Desktop</span></button>
           <button class="exp-side-item" type="button" data-side-path="/Downloads">${getIcon('download', 16)}<span>Downloads</span></button>
           <button class="exp-side-item" type="button" data-side-path="/Documents">${getIcon('folder', 16)}<span>Documents</span></button>
           <button class="exp-side-item" type="button" data-side-path="/Pictures">${getIcon('image-file', 16)}<span>Pictures</span></button>
           <button class="exp-side-item" type="button" data-side-path="/Music">${getIcon('folder-music', 16)}<span>Music</span></button>
           <button class="exp-side-item" type="button" data-side-path="/Videos">${getIcon('folder-video', 16)}<span>Videos</span></button>
-          <div class="exp-side-section">This PC</div>
+          <div class="exp-side-sep"></div>
           <button class="exp-side-item" type="button" data-side-path="/">${getIcon('thispc', 16)}<span>This PC</span></button>
-          <button class="exp-side-item" type="button" data-side-path="/">${getIcon('disk', 16)}<span>Local Disk (C:)</span></button>
-          <div class="exp-side-section">Other</div>
+          <button class="exp-side-item" type="button" data-side-mode="network">${getIcon('cloud', 16)}<span>Network</span></button>
+          <div class="exp-side-grow"></div>
           <button class="exp-side-item" type="button" data-side-app="recyclebin">${getIcon(state.recycleBin.length ? 'recyclebin-full' : 'recyclebin', 16)}<span>Recycle Bin</span></button>
         </aside>
         <section class="exp-main">
@@ -2957,6 +3056,7 @@ APPS.explorer = {
         return;
       }
       nav.path = normalized;
+      nav.mode = null;
       nav.search = '';
       searchInput.value = '';
       nav.selected.clear();
@@ -2970,7 +3070,21 @@ APPS.explorer = {
     }
     win.explorerNavigate = (path) => navigate(path, true);
 
+    function openMode(mode) {
+      nav.mode = mode;
+      nav.path = '/';
+      nav.search = '';
+      searchInput.value = '';
+      nav.selected.clear();
+      const titles = { home: 'Home - File Explorer', gallery: 'Gallery - File Explorer', network: 'Network - File Explorer' };
+      win.setTitle(titles[mode] || 'File Explorer');
+      render();
+    }
+
     function crumbHtml() {
+      if (nav.mode === 'home') return `<button class="crumb" type="button" data-crumb="/">${getIcon('home', 13)}<span>Home</span></button>`;
+      if (nav.mode === 'gallery') return `<button class="crumb" type="button" data-crumb="/">${getIcon('image-file', 13)}<span>Gallery</span></button>`;
+      if (nav.mode === 'network') return `<button class="crumb" type="button" data-crumb="/">${getIcon('cloud', 13)}<span>Network</span></button>`;
       const parts = FS.parts(nav.path);
       let html = `<button class="crumb" type="button" data-crumb="/">${getIcon('thispc', 13)}<span>This PC</span></button>`;
       let accumulated = '';
@@ -3015,29 +3129,159 @@ APPS.explorer = {
       const hasSelection = nav.selected.size > 0;
       $$('[data-cmd-needs-selection]', root).forEach((button) => { button.disabled = !hasSelection; });
     }
+    function quickAccessFolders() {
+      return ['/Desktop', '/Downloads', '/Documents', '/Pictures', '/Music', '/Videos']
+        .map((path) => ({ path, node: FS.get(path) }))
+        .filter((entry) => entry.node);
+    }
+    function recentFiles(limit = 8) {
+      const found = [];
+      const walk = (path) => {
+        for (const node of FS.list(path)) {
+          const childPath = FS.join(path, node.name);
+          if (node.type === 'folder') walk(childPath);
+          else found.push({ path: childPath, node });
+        }
+      };
+      walk('/');
+      return found
+        .sort((a, b) => new Date(b.node.modified) - new Date(a.node.modified))
+        .slice(0, limit);
+    }
+    function galleryImages() {
+      const found = [];
+      const walk = (path) => {
+        for (const node of FS.list(path)) {
+          const childPath = FS.join(path, node.name);
+          if (node.type === 'folder') walk(childPath);
+          else if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'].includes(fileExtension(node.name))) found.push({ path: childPath, node });
+        }
+      };
+      walk('/Pictures');
+      return found;
+    }
+    function thisPcHtml() {
+      const fsUsed = (FS.root().children || []).reduce((sum, node) => sum + nodeSize(node), 0);
+      const total = 256 * 1024 * 1024 * 1024;
+      const used = fsUsed + 68 * 1024 * 1024 * 1024;
+      const percent = Math.min(100, Math.round((used / total) * 100));
+      return `<div class="exp-thispc">
+        <div class="exp-section-title">Folders</div>
+        <div class="exp-grid">
+          ${quickAccessFolders().map(({ path, node }) => `<div class="exp-item" data-item-path="${esc(path)}" role="option" tabindex="0">
+            <div class="ei-icon">${getIcon(fileIconName(node), 40)}</div>
+            <div class="ei-name">${esc(node.name)}</div>
+          </div>`).join('')}
+        </div>
+        <div class="exp-section-title">Devices and drives</div>
+        <div class="exp-drive">
+          <span class="ed-icon">${getIcon('disk', 34)}</span>
+          <div class="ed-meta">
+            <strong>Local Disk (C:)</strong>
+            <div class="ed-bar"><i style="width:${percent}%"></i></div>
+            <span>${formatBytes(total - used)} free of 256 GB</span>
+          </div>
+        </div>
+      </div>`;
+    }
+    function matchesSearch(name) {
+      const q = nav.search.trim().toLowerCase();
+      return !q || String(name).toLowerCase().includes(q);
+    }
+    function homeHtml() {
+      const recent = recentFiles(8).filter((entry) => matchesSearch(entry.node.name));
+      const folders = quickAccessFolders().filter((entry) => matchesSearch(entry.node.name));
+      return `<div class="exp-home">
+        <div class="exp-section-title">Quick access</div>
+        <div class="exp-grid">
+          ${folders.map(({ path, node }) => `<div class="exp-item" data-item-path="${esc(path)}" role="option" tabindex="0">
+            <div class="ei-icon">${getIcon(fileIconName(node), 40)}</div>
+            <div class="ei-name">${esc(node.name)}</div>
+          </div>`).join('')}
+        </div>
+        <div class="exp-section-title">Recent files</div>
+        ${recent.length ? `<div class="exp-list">
+          <div class="exp-list-header"><span>Name</span><span>Date modified</span><span>Type</span><span>Size</span></div>
+          ${recent.map(({ path, node }) => `<div class="exp-list-row" data-item-path="${esc(path)}" role="option" tabindex="0">
+            <div class="el-name">${getIcon(fileIconName(node), 18)}<span>${esc(node.name)}</span></div>
+            <div class="el-meta">${esc(formatDate(node.modified, 'short'))}</div>
+            <div class="el-meta">${esc(fileTypeLabel(node))}</div>
+            <div class="el-meta">${esc(formatBytes(nodeSize(node)))}</div>
+          </div>`).join('')}
+        </div>` : `<div class="exp-empty-inline">No recent files.</div>`}
+      </div>`;
+    }
+    function galleryThumb(path) {
+      let hash = 0;
+      for (let i = 0; i < path.length; i++) hash = ((hash << 5) - hash + path.charCodeAt(i)) | 0;
+      const seed = Math.abs(hash);
+      const hue = seed % 360;
+      const hue2 = (hue + 48) % 360;
+      const sun = 50 + (seed % 150);
+      const id = `gal${seed}`;
+      return `<svg viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style="width:100%;height:100%;display:block">
+        <defs>
+          <linearGradient id="${id}a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="hsl(${hue} 60% 28%)"/><stop offset=".55" stop-color="hsl(${hue2} 68% 58%)"/><stop offset="1" stop-color="hsl(${(hue2 + 24) % 360} 66% 76%)"/></linearGradient>
+        </defs>
+        <rect width="1000" height="620" fill="url(#${id}a)"/>
+        <circle cx="${sun}" cy="${140 + seed % 80}" r="${52 + seed % 24}" fill="hsl(${(hue2 + 40) % 360} 96% 78%)" opacity=".9"/>
+        <path d="M0 430 L160 250 L300 390 L460 180 L640 410 L780 285 L1000 430 V620 H0Z" fill="hsl(${(hue + 160) % 360} 30% 22%)" opacity=".9"/>
+      </svg>`;
+    }
+    function galleryHtml() {
+      const images = galleryImages().filter((entry) => matchesSearch(entry.node.name));
+      if (!images.length) return `<div class="exp-empty-inline">Your pictures will appear here.</div>`;
+      return `<div class="exp-gallery">${images.map(({ path, node }) => `<div class="exp-gallery-tile" data-item-path="${esc(path)}" role="option" tabindex="0">
+        <span class="egt-thumb">${galleryThumb(path)}</span>
+        <span class="egt-name">${esc(node.name)}</span>
+      </div>`).join('')}</div>`;
+    }
+    function networkHtml() {
+      return `<div class="exp-network">
+        <div class="exp-section-title">Network and Internet</div>
+        <div class="exp-list">
+          <div class="exp-list-row"><div class="el-name">${getIcon('cloud', 18)}<span>DESKTOP-SIM11</span></div><div class="el-meta">This PC</div><div class="el-meta"></div><div class="el-meta"></div></div>
+        </div>
+        <div class="exp-section-title">Devices</div>
+        <div class="exp-empty exp-empty-inline">No network devices discovered.</div>
+      </div>`;
+    }
     function render() {
       crumbs.innerHTML = crumbHtml();
-      $$('[data-side-path]', root).forEach((item) => item.classList.toggle('active', FS.normalize(item.dataset.sidePath) === nav.path));
+      $$('[data-side-path]', root).forEach((item) => item.classList.toggle('active', !nav.mode && FS.normalize(item.dataset.sidePath) === nav.path));
+      $$('[data-side-mode]', root).forEach((item) => item.classList.toggle('active', item.dataset.sideMode === nav.mode));
       $('[data-nav="back"]', root).disabled = nav.index <= 0;
       $('[data-nav="forward"]', root).disabled = nav.index >= nav.history.length - 1;
-      $('[data-nav="up"]', root).disabled = nav.path === '/';
+      $('[data-nav="up"]', root).disabled = nav.path === '/' || !!nav.mode;
       updateCommandState();
-      const list = items();
-      const current = FS.get(nav.path);
-      if (!list.length) {
-        content.innerHTML = `<div class="exp-empty">${nav.search ? 'No items match your search.' : 'This folder is empty.'}</div>`;
-      } else if (nav.view === 'list') {
-        content.innerHTML = `<div class="exp-list">
-          <div class="exp-list-header"><span>Name</span><span>Date modified</span><span>Type</span><span>Size</span></div>
-          ${list.map((node) => itemHtml(node, 'list')).join('')}
-        </div>`;
-      } else {
-        content.innerHTML = `<div class="exp-grid">${list.map((node) => itemHtml(node, 'grid')).join('')}</div>`;
+      if (nav.mode === 'home') {
+        content.innerHTML = homeHtml();
+        itemCount.textContent = '';
+      } else if (nav.mode === 'gallery') {
+        content.innerHTML = galleryHtml();
+        itemCount.textContent = '';
+      } else if (nav.mode === 'network') {
+        content.innerHTML = networkHtml();
+        itemCount.textContent = '';
+      } else {        const list = items();
+        const current = FS.get(nav.path);
+        if (nav.path === '/' && !nav.search.trim()) {
+          content.innerHTML = thisPcHtml();
+        } else if (!list.length) {
+          content.innerHTML = `<div class="exp-empty">${nav.search ? 'No items match your search.' : 'This folder is empty.'}</div>`;
+        } else if (nav.view === 'list') {
+          content.innerHTML = `<div class="exp-list">
+            <div class="exp-list-header"><span>Name</span><span>Date modified</span><span>Type</span><span>Size</span></div>
+            ${list.map((node) => itemHtml(node, 'list')).join('')}
+          </div>`;
+        } else {
+          content.innerHTML = `<div class="exp-grid">${list.map((node) => itemHtml(node, 'grid')).join('')}</div>`;
+        }
+        itemCount.textContent = `${list.length} item${list.length === 1 ? '' : 's'}`;
+        const currentLabel = current ? current.name : 'This PC';
+        win.setTitle(nav.path === '/' ? 'This PC - File Explorer' : `${currentLabel} - File Explorer`);
       }
-      itemCount.textContent = `${list.length} item${list.length === 1 ? '' : 's'}`;
       selectionCount.textContent = nav.selected.size ? `${nav.selected.size} selected` : '';
-      const currentLabel = current ? current.name : 'This PC';
-      win.setTitle(nav.path === '/' ? 'This PC - File Explorer' : `${currentLabel} - File Explorer`);
       $$('[data-item-path]', content).forEach((item) => {
         item.addEventListener('dragstart', (event) => {
           event.dataTransfer.setData('text/plain', item.dataset.itemPath);
@@ -3181,8 +3425,8 @@ APPS.explorer = {
       const navButton = event.target.closest('[data-nav]');
       if (navButton) {
         const action = navButton.dataset.nav;
-        if (action === 'back' && nav.index > 0) { nav.index--; nav.path = nav.history[nav.index]; nav.selected.clear(); render(); }
-        if (action === 'forward' && nav.index < nav.history.length - 1) { nav.index++; nav.path = nav.history[nav.index]; nav.selected.clear(); render(); }
+        if (action === 'back' && nav.index > 0) { nav.index--; nav.path = nav.history[nav.index]; nav.mode = null; nav.selected.clear(); render(); }
+        if (action === 'forward' && nav.index < nav.history.length - 1) { nav.index++; nav.path = nav.history[nav.index]; nav.mode = null; nav.selected.clear(); render(); }
         if (action === 'up') navigate(FS.parent(nav.path));
         return;
       }
@@ -3190,6 +3434,8 @@ APPS.explorer = {
       if (crumb) { navigate(crumb.dataset.crumb); return; }
       const side = event.target.closest('[data-side-path]');
       if (side) { navigate(side.dataset.sidePath); return; }
+      const sideMode = event.target.closest('[data-side-mode]');
+      if (sideMode) { openMode(sideMode.dataset.sideMode); return; }
       if (event.target.closest('[data-side-app="recyclebin"]')) { openApp('recyclebin'); return; }
       const viewButton = event.target.closest('[data-view]');
       if (viewButton) { nav.view = viewButton.dataset.view; render(); return; }
