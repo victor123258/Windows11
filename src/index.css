@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+@theme {
+  --font-segoe: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+}
+
+html, body, #root { height: 100%; }
+
+body {
+  font-family: var(--font-segoe);
+  overflow: hidden;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  background: #000;
+}
+
+.select-ok, .select-ok * { user-select: text; }
+
+/* ---------- Windows 11 scrollbars ---------- */
+.winscroll { scrollbar-width: thin; scrollbar-color: rgba(0,0,0,.28) transparent; }
+.winscroll::-webkit-scrollbar { width: 8px; height: 8px; }
+.winscroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,.28); border-radius: 8px; background-clip: padding-box; }
+.winscroll::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,.42); }
+.winscroll::-webkit-scrollbar-track, .winscroll::-webkit-scrollbar-corner { background: transparent; }
+.winscroll-dk { scrollbar-color: rgba(255,255,255,.3) transparent; }
+.winscroll-dk::-webkit-scrollbar-thumb { background: rgba(255,255,255,.3); }
+.winscroll-dk::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.45); }
+
+/* ---------- Keyframes ---------- */
+@keyframes winIn { from { opacity: 0; transform: scale(.93); } to { opacity: 1; transform: scale(1); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes popUp { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes popInR { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes popInL { from { opacity: 0; transform: translateX(-60px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes spin360 { to { transform: rotate(360deg); } }
+@keyframes lockRise { from { transform: translateY(0); } to { transform: translateY(-105%); } }
+@keyframes dotPulse { 0%,100% { opacity: .25; transform: scale(.8); } 50% { opacity: 1; transform: scale(1); } }
+@keyframes progSlide { 0% { left: -30%; width: 30%; } 50% { width: 45%; } 100% { left: 105%; width: 30%; } }
+@keyframes shimmer { to { background-position: -200% 0; } }
+@keyframes toastIn { from { opacity: 0; transform: translateY(24px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes breathe { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+
+.anim-win-in { animation: winIn .16s cubic-bezier(.2,.9,.3,1.1) both; }
+.anim-fade { animation: fadeIn .18s ease both; }
+.anim-pop { animation: popUp .18s cubic-bezier(.16,.84,.3,1) both; }
+.anim-pop-r { animation: popInR .18s cubic-bezier(.16,.84,.3,1) both; }
+.anim-pop-l { animation: popInL .28s cubic-bezier(.16,.84,.3,1) both; }
+
+/* ---------- Boot spinner (Windows 11 authentic ring) ---------- */
+@keyframes winRing {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes winDash {
+  0%   { stroke-dasharray: 1, 150; stroke-dashoffset: 0; }
+  50%  { stroke-dasharray: 90, 150; stroke-dashoffset: -35; }
+  100% { stroke-dasharray: 1, 150; stroke-dashoffset: -125; }
+}
+.boot-ring { animation: winRing 2s linear infinite; }
+.boot-ring circle {
+  stroke: #fff; fill: none; stroke-width: 2.8; stroke-linecap: round;
+  stroke-dasharray: 1, 150; stroke-dashoffset: 0;
+  animation: winDash 1.5s ease-in-out infinite;
+}
+
+/* Lock screen clock vertical centering helper */
+@keyframes lockFadeUp { from { opacity:0; transform: translateY(30px); } to { opacity:1; transform: translateY(0); } }
+.lock-clock { animation: lockFadeUp .7s cubic-bezier(.2,.8,.3,1) both .15s; }
+.lock-bottom { animation: lockFadeUp .7s cubic-bezier(.2,.8,.3,1) both .4s; }
+
+/* Sign-in blur overlay */
+.signin-bg { position: relative; }
+.signin-bg::before {
+  content: ""; position: absolute; inset: 0;
+  background: inherit; background-size: cover; background-position: center;
+  filter: blur(40px) brightness(.65); transform: scale(1.15);
+}
+.signin-bg::after {
+  content: ""; position: absolute; inset: 0;
+  background: rgba(0,0,0,.35);
+}
+
+/* small inline spinner (windows style) */
+.dots { display: inline-flex; gap: 7px; }
+.dots i { width: 7px; height: 7px; border-radius: 9999px; background: currentColor; animation: dotPulse 1.3s ease-in-out infinite; }
+.dots i:nth-child(1) { animation-delay: 0s; } .dots i:nth-child(2) { animation-delay: .15s; }
+.dots i:nth-child(3) { animation-delay: .3s; } .dots i:nth-child(4) { animation-delay: .45s; }
+.dots i:nth-child(5) { animation-delay: .6s; }
+
+/* Win11 loading progress bar */
+.prog { position: relative; overflow: hidden; background: rgba(0,0,0,.12); border-radius: 3px; }
+.prog > i { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: #0067c0; animation: progSlide 1.4s ease-in-out infinite; }
+
+/* toggle switch */
+.tswitch { width: 40px; height: 20px; border-radius: 10px; border: 1px solid rgba(0,0,0,.5); background: transparent; position: relative; transition: background .15s, border-color .15s; flex: none; }
+.tswitch::after { content: ""; position: absolute; top: 4px; left: 5px; width: 10px; height: 10px; border-radius: 9999px; background: rgba(0,0,0,.7); transition: left .15s, background .15s, width .15s, height .15s, top .15s; }
+.tswitch.on { background: var(--acc, #0067c0); border-color: var(--acc, #0067c0); }
+.tswitch.on::after { left: 24px; background: #fff; }
+.tswitch-dk { border-color: rgba(255,255,255,.6); }
+.tswitch-dk::after { background: rgba(255,255,255,.9); }
+
+/* Win11 range slider */
+.wslider { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 4px; outline: none;
+  background: linear-gradient(to right, var(--acc,#0067c0) var(--fill,50%), rgba(120,120,120,.4) var(--fill,50%)); }
+.wslider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 9999px;
+  background: var(--acc,#0067c0); border: 4.5px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.22), 0 2px 6px rgba(0,0,0,.25); cursor: pointer; }
+.wslider::-moz-range-thumb { width: 16px; height: 16px; border-radius: 9999px; background: var(--acc,#0067c0); border: 4px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.22); cursor: pointer; }
+
+/* taskbar icon running indicators (Win11: thin pill accent = focused, tiny dot = running) */
+.tb-active::after { content: ""; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 12px; height: 2.5px; border-radius: 2px; background: var(--acc, #0078d4); }
+.tb-active-min::after { content: ""; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 4px; height: 2.5px; border-radius: 2px; background: rgba(150,150,150,.85); }
+
+/* window minimize state */
+.win-min { opacity: 0; transform: scale(.92) translateY(24px); pointer-events: none; }
+
+/* edge tab shape */
+.edge-tab-active { background: #fff; box-shadow: 0 -1px 3px rgba(0,0,0,.06); }
+.edge-tab-active-dk { background: #2b2b2b; }
+
+.shine { background: linear-gradient(110deg, rgba(255,255,255,0) 33%, rgba(255,255,255,.35) 50%, rgba(255,255,255,0) 66%); background-size: 200% 100%; animation: shimmer 3.2s linear infinite; }
+
+/* Mica Effect Noise Overlay */
+.mica::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.035;
+  pointer-events: none;
+  z-index: -1;
+}
+.dark .mica::before { opacity: 0.05; }
+
